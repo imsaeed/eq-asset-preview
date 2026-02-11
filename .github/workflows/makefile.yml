@@ -1,18 +1,35 @@
 name: Makefile CI
 
 on:
-  push:
-    branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
+  workflow_dispatch:
+    inputs: 
+      tag:
+        description: 'Release tag (eg v1.2.3)
+        required: true
+      release_name:
+      description: 'Release name':
+      required: true
 
+permissions:
+  contents: write
+  
 jobs:
-  build:
+  build-and-release:
 
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
 
-    - name: Install dependencies
+    - name: make build
       run: make build
+
+    -name: Create Release
+    uses: softprops/action-gh-release@v2
+    with:
+      tag_name: ${{ github.event.inputs.tag }}
+      name: ${{ github.event.inputs.release_name }}
+      files: |
+        ./build.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
